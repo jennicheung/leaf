@@ -1,38 +1,96 @@
 <template>
-  <form @submit="submitQuery" action="https://vuejs.org/" method="post">
-    <label for="query">Search Term</label>
-    <input id="query" v-model="query" type="text" name="query" />
-    <input type="submit" value="Submit" />
-  </form>
+  <div class="container">
+    <div class="header">
+      <form @submit="submitQuery">
+        <label for="query">Search</label>
+        <input id="query" v-model="query" type="text" name="query" />
+        <input type="submit" value="Submit" />
+      </form>
+      <div class="sort">
+        <div>
+          Sort Alphabetically
+          <button
+            v-on:click="sortOrder = 'asc'"
+            v-if="sortOrder == 'desc' || sortOrder == 'none'"
+          >
+            ↓
+          </button>
+          <button v-on:click="sortOrder = 'desc'" v-if="sortOrder == 'asc'">
+            ↑
+          </button>
+          <button v-on:click="sortOrder = 'none'">(remove sort)</button>
+        </div>
+      </div>
+    </div>
+    <ul v-if="articles && articles.length">
+      <li v-for="(item, index) in articles" :key="index">
+        <div class="col image">
+          <img
+            v-bind:src="item.urlToImage"
+            v-on:click="modalImage = item.urlToImage"
+          />
+        </div>
+        <div class="col">
+          <a v-bind:href="item.url">{{ item.title }}</a>
+          <div class="byline">
+            {{ item.source.name
+            }}{{ item.source && item.source.name && item.author && " - "
+            }}{{ item.author }}
+          </div>
+          <div class="desc">{{ item.description }}</div>
+        </div>
+      </li>
+    </ul>
+    <div v-if="!articles || !articles.length">
+      <div v-if="query && query !== ''">No results found for "{{ query }}"</div>
+      <div v-if="!query || query === ''">
+        Please enter a search term
+      </div>
+    </div>
+  </div>
+  <Modal v-bind:image="modalImage" v-on:close="modalImage = null" />
 </template>
 
 <script>
-import testData from "../testData.js";
-
-/* eslint-disable no-debugger */
+// was using this earlier because the free api endpoint has a limit of 100 calls
+//import testData from "../testData.js";
+import Modal from "./Modal.vue";
+import _ from "lodash";
 
 export default {
   name: "Main",
   props: {
     msg: String,
   },
+  components: {
+    Modal,
+  },
   data() {
     return {
       info: null,
-      query: "tesla",
+      query: "",
+      sortOrder: "none",
+      articles: [],
+      modalImage: null,
       data: [],
     };
   },
   methods: {
     processData: function(data) {
       this.data = data.articles;
-      console.log(this.data[0]);
+      this.sortData();
+    },
+    sortData: function() {
+      if (this.sortOrder !== "none") {
+        this.articles = _.orderBy(this.data, ["title"], [this.sortOrder]);
+      } else {
+        this.articles = this.data;
+      }
     },
     queryTerm: function(term) {
-      console.log(term);
-      this.processData(testData);
+      // console.log(term);
+      // this.processData(testData);
 
-      /*
       fetch(
         `https://newsapi.org/v2/everything?pageSize=20&q=${encodeURI(
           term
@@ -45,32 +103,103 @@ export default {
         .catch((error) => {
           console.log(error);
         });
-        */
     },
     submitQuery: function(e) {
       this.queryTerm(this.query);
       e.preventDefault();
     },
+    showImage: function() {},
+  },
+  watch: {
+    sortOrder: function() {
+      this.sortData();
+    },
   },
   mounted() {},
 };
-/* eslint-enable no-debugger */
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
+<style lang="scss" scoped>
+.container {
+  font-size: 16px;
+  padding: 1em;
 }
 a {
-  color: #42b983;
+  font-weight: 700;
+  color: inherit;
+}
+ul {
+  display: block;
+  text-align: left;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    margin-bottom: 2em;
+    display: flex;
+    flex-direction: column;
+    .col {
+      flex: 4;
+      &.image {
+        flex: 1;
+        min-width: 180px;
+        margin-bottom: 1em;
+      }
+    }
+  }
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 1em 0;
+  form {
+    margin-bottom: 10px;
+  }
+  button {
+    appearance: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+}
+.byline {
+  font-size: 0.8em;
+  color: #666;
+  margin: 0.8em 0;
+}
+.desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.image {
+  img {
+    max-width: 100%;
+    cursor: pointer;
+  }
+}
+input {
+  margin-left: 10px;
+}
+@media (min-width: 769px) and (max-width: 922px) {
+}
+@media (min-width: 481px) and (max-width: 768px) {
+}
+
+@media (min-width: 480px) {
+  ul {
+    li {
+      flex-direction: row;
+      .col {
+        &.image {
+          margin-right: 1em;
+        }
+      }
+    }
+  }
 }
 </style>
