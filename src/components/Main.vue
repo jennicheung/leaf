@@ -42,8 +42,10 @@
       </li>
     </ul>
     <div v-if="!articles || !articles.length">
-      <div v-if="query && query !== ''">No results found for "{{ query }}"</div>
-      <div v-if="!query || query === ''">
+      <div v-if="searchTerm && searchTerm !== ''">
+        No results found for "{{ searchTerm }}"
+      </div>
+      <div v-if="!searchTerm || searchTerm === ''">
         Please enter a search term
       </div>
     </div>
@@ -68,6 +70,7 @@ export default {
     return {
       info: null,
       query: "",
+      searchTerm: "",
       sortOrder: 0,
       articles: [],
       modalImage: null,
@@ -117,7 +120,8 @@ export default {
         });
     },
     submitQuery: function(e) {
-      this.queryTerm(this.query);
+      this.searchTerm = this.query;
+      this.queryTerm(this.searchTerm);
       e.preventDefault();
     },
     showImage: function() {},
