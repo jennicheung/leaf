@@ -10,15 +10,15 @@
         <div>
           Sort Alphabetically
           <button
-            v-on:click="sortOrder = 'asc'"
-            v-if="sortOrder == 'desc' || sortOrder == 'none'"
+            v-on:click="sortOrder = 1"
+            v-if="sortOrder == -1 || sortOrder == 0"
           >
             ↓
           </button>
-          <button v-on:click="sortOrder = 'desc'" v-if="sortOrder == 'asc'">
+          <button v-on:click="sortOrder = -1" v-if="sortOrder == 1">
             ↑
           </button>
-          <button v-on:click="sortOrder = 'none'">(remove sort)</button>
+          <button v-on:click="sortOrder = 0">(remove sort)</button>
         </div>
       </div>
     </div>
@@ -53,9 +53,8 @@
 
 <script>
 // was using this earlier because the free api endpoint has a limit of 100 calls
-//import testData from "../testData.js";
+// import testData from "../testData.js";
 import Modal from "./Modal.vue";
-import _ from "lodash";
 
 export default {
   name: "Main",
@@ -69,7 +68,7 @@ export default {
     return {
       info: null,
       query: "",
-      sortOrder: "none",
+      sortOrder: 0,
       articles: [],
       modalImage: null,
       data: [],
@@ -81,8 +80,21 @@ export default {
       this.sortData();
     },
     sortData: function() {
-      if (this.sortOrder !== "none") {
-        this.articles = _.orderBy(this.data, ["title"], [this.sortOrder]);
+      let newDataArr = [...this.data];
+
+      if (this.sortOrder !== 0) {
+        this.articles = newDataArr.sort((a, b) => {
+          let returnNum = 0;
+          const titleA = a.title.toUpperCase();
+          const titleB = b.title.toUpperCase();
+          if (titleA < titleB) {
+            returnNum = -1;
+          }
+          if (titleA > titleB) {
+            returnNum = 1;
+          }
+          return returnNum * this.sortOrder;
+        });
       } else {
         this.articles = this.data;
       }
